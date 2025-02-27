@@ -1,10 +1,11 @@
+// /components/pulse/Pulse.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { PulseMessage } from "./PulseMessage";
 import { PulseInput } from "./PulseInput";
 import { PulseFileUpload } from "./PulseFileUpload";
-import { queryPulse, analyzeDocument } from "@/lib/api/pulse-client";
+import { streamPulseQuery, streamDocumentAnalysis, PulseError } from "@/lib/api/pulse-client";
 
 interface Source {
   title: string;
@@ -16,9 +17,28 @@ interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
-  timestamp: string; // Using string instead of Date to avoid hydration errors
+  timestamp: string;
   sources?: Source[];
   isLoading?: boolean;
+  isStreaming?: boolean;
+  thinking?: boolean;
+  thinkingContent?: string;
+}
+
+interface StreamCallback {
+  (chunk: string): void;
+}
+
+interface ThinkingStreamCallback {
+  (chunk: string, thinking: string | null): void;
+}
+
+interface SourceCallback {
+  (sources: Source[]): void;
+}
+
+interface ErrorCallback {
+  (error: Error): void;
 }
 
 export function Pulse() {
@@ -52,10 +72,8 @@ export function Pulse() {
       timestamp: new Date().toISOString(),
     };
 
-    // Add user message
     setMessages((prev) => [...prev, userMessage]);
 
-    // Add loading message placeholder
     const loadingMessageId = (Date.now() + 1).toString();
     setMessages((prev) => [
       ...prev,
@@ -65,59 +83,118 @@ export function Pulse() {
         role: "assistant",
         timestamp: new Date().toISOString(),
         isLoading: true,
+        thinking: true,
+        isStreaming: false,
+        sources: [],
+        thinkingContent: ""
       },
     ]);
 
     setIsLoading(true);
-
+    
+    let capturedThinkingContent = "";
+    let thinkingTimer: NodeJS.Timeout | undefined;
+    
     try {
-      const response = await queryPulse(text);
+      thinkingTimer = setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === loadingMessageId
+              ? {
+                  ...msg,
+                  thinking: false,
+                  isStreaming: true,
+                  thinkingContent: capturedThinkingContent
+                }
+              : msg
+          )
+        );
+      }, 3000);
       
-      if ('message' in response) {
-        // Handle error response
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === loadingMessageId
-              ? {
-                  id: loadingMessageId,
-                  content: response.message,
-                  role: "assistant",
-                  timestamp: new Date().toISOString(),
-                }
-              : msg
-          )
-        );
-      } else {
-        // Handle successful response
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === loadingMessageId
-              ? {
-                  id: loadingMessageId,
-                  content: response.content,
-                  role: "assistant",
-                  timestamp: new Date().toISOString(),
-                  sources: response.sources,
-                }
-              : msg
-          )
-        );
-      }
+      await streamPulseQuery(
+        text,
+        (chunk, thinking) => {
+          if (thinking) {
+            capturedThinkingContent += thinking;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === loadingMessageId
+                  ? {
+                      ...msg,
+                      thinkingContent: capturedThinkingContent
+                    }
+                  : msg
+              )
+            );
+          } else {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === loadingMessageId
+                  ? {
+                      ...msg,
+                      content: chunk,
+                      thinking: false,
+                      isLoading: true,
+                      isStreaming: true,
+                      thinkingContent: capturedThinkingContent
+                    }
+                  : msg
+              )
+            );
+          }
+        },
+        (sources) => {
+          clearTimeout(thinkingTimer);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessageId
+                ? {
+                    ...msg,
+                    isLoading: false,
+                    isStreaming: false,
+                    sources: sources,
+                    thinking: false,
+                    thinkingContent: capturedThinkingContent
+                  }
+                : msg
+            )
+          );
+          setIsLoading(false);
+        },
+        (error) => {
+          clearTimeout(thinkingTimer);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessageId
+                ? {
+                    ...msg,
+                    content: error.message,
+                    isLoading: false,
+                    isStreaming: false,
+                    thinking: false
+                  }
+                : msg
+            )
+          );
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.error("Error processing request:", error);
+      if (thinkingTimer) clearTimeout(thinkingTimer);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === loadingMessageId
             ? {
-                id: loadingMessageId,
+                ...msg,
                 content: "I'm sorry, I encountered an error processing your request. Please try again.",
-                role: "assistant",
-                timestamp: new Date().toISOString(),
+                isLoading: false,
+                isStreaming: false,
+                thinking: false
               }
             : msg
         )
       );
-    } finally {
       setIsLoading(false);
     }
   };
@@ -125,7 +202,6 @@ export function Pulse() {
   const handleFileUpload = async (fileContent: string) => {
     setShowFileUpload(false);
     
-    // Add user message about the file upload
     const userMessage: Message = {
       id: Date.now().toString(),
       content: "I've uploaded a document for analysis.",
@@ -135,7 +211,6 @@ export function Pulse() {
     
     setMessages((prev) => [...prev, userMessage]);
     
-    // Add loading message placeholder
     const loadingMessageId = (Date.now() + 1).toString();
     setMessages((prev) => [
       ...prev,
@@ -145,59 +220,105 @@ export function Pulse() {
         role: "assistant",
         timestamp: new Date().toISOString(),
         isLoading: true,
+        thinking: true,
+        isStreaming: false,
+        sources: [],
+        thinkingContent: ""
       },
     ]);
     
     setIsLoading(true);
     
+    let capturedThinkingContent = "";
+    let thinkingTimer: NodeJS.Timeout | undefined;
+    
     try {
-      const response = await analyzeDocument(fileContent);
+      thinkingTimer = setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === loadingMessageId
+              ? {
+                  ...msg,
+                  thinking: false,
+                  isStreaming: true,
+                  content: "Analyzing your document...",
+                  thinkingContent: capturedThinkingContent
+                }
+              : msg
+          )
+        );
+      }, 4000);
       
-      if ('message' in response) {
-        // Handle error response
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === loadingMessageId
-              ? {
-                  id: loadingMessageId,
-                  content: response.message,
-                  role: "assistant",
-                  timestamp: new Date().toISOString(),
-                }
-              : msg
-          )
-        );
-      } else {
-        // Handle successful response
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === loadingMessageId
-              ? {
-                  id: loadingMessageId,
-                  content: response.content,
-                  role: "assistant",
-                  timestamp: new Date().toISOString(),
-                  sources: response.sources,
-                }
-              : msg
-          )
-        );
-      }
+      await streamDocumentAnalysis(
+        fileContent,
+        (chunk: string) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessageId
+                ? {
+                    ...msg,
+                    content: chunk,
+                    thinking: false,
+                    isLoading: true,
+                    isStreaming: true,
+                    thinkingContent: capturedThinkingContent
+                  }
+                : msg
+            )
+          );
+        },
+        (sources: Source[]) => {
+          clearTimeout(thinkingTimer);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessageId
+                ? {
+                    ...msg,
+                    isLoading: false,
+                    isStreaming: false,
+                    sources: sources,
+                    thinking: false,
+                    thinkingContent: capturedThinkingContent
+                  }
+                : msg
+            )
+          );
+          setIsLoading(false);
+        },
+        (error: PulseError) => {
+          clearTimeout(thinkingTimer);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === loadingMessageId
+                ? {
+                    ...msg,
+                    content: error.message,
+                    isLoading: false,
+                    isStreaming: false,
+                    thinking: false
+                  }
+                : msg
+            )
+          );
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.error("Error processing document:", error);
+      if (thinkingTimer) clearTimeout(thinkingTimer);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === loadingMessageId
             ? {
-                id: loadingMessageId,
+                ...msg,
                 content: "I'm sorry, I encountered an error processing your document. Please try again with a different file.",
-                role: "assistant",
-                timestamp: new Date().toISOString(),
+                isLoading: false,
+                isStreaming: false,
+                thinking: false
               }
             : msg
         )
       );
-    } finally {
       setIsLoading(false);
     }
   };
