@@ -14,7 +14,7 @@ import {
 import { Settings, LogOut } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
-export default function Dashboard() {
+export default function PulsePage() {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -22,12 +22,12 @@ export default function Dashboard() {
     <SidebarProvider>
       <div className="flex h-screen bg-slate-50">
         <Sidebar className="bg-white shadow-lg border-r border-slate-200">
-          <SidebarTrigger />
           <SidebarHeader className="flex items-center px-6 py-4 border-b border-slate-100">
             <h2 className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
               HealthSync
             </h2>
           </SidebarHeader>
+          <SidebarTrigger className="bg-white rounded-full p-1.5 shadow-md hover:shadow-lg transition-all border border-slate-200" />
           <SidebarContent className="h-full flex flex-col justify-between bg-white">
             <div>
               <SidebarMenu>
@@ -36,19 +36,21 @@ export default function Dashboard() {
                   <div className="flex rounded-xl bg-slate-100/80 p-1.5 border border-slate-200">
                     <button
                       onClick={() => router.push('/pulse')}
-                      className={`flex-1 rounded-lg py-2.5 px-4 text-sm font-medium transition-all duration-200 ${pathname === '/pulse'
+                      className={`flex-1 rounded-lg py-2.5 px-4 text-sm font-medium transition-all duration-200 ${
+                        pathname === '/pulse'
                           ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/80'
                           : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                      }`}
                     >
                       Pulse
                     </button>
                     <button
                       onClick={() => router.push('/note')}
-                      className={`flex-1 rounded-lg py-2.5 px-4 text-sm font-medium transition-all duration-200 ${pathname === '/note'
+                      className={`flex-1 rounded-lg py-2.5 px-4 text-sm font-medium transition-all duration-200 ${
+                        pathname === '/note'
                           ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/80'
                           : 'text-slate-600 hover:text-slate-900'
-                        }`}
+                      }`}
                     >
                       Notes
                     </button>
@@ -63,8 +65,9 @@ export default function Dashboard() {
                       className="hover:bg-slate-100 rounded-lg"
                     >
                       <svg
-                        className={`size-5 transition-colors duration-200 ${pathname === '/medkit' ? 'text-blue-600' : 'text-slate-600'
-                          }`}
+                        className={`size-5 transition-colors duration-200 ${
+                          pathname === '/medkit' ? 'text-blue-600' : 'text-slate-600'
+                        }`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -83,8 +86,9 @@ export default function Dashboard() {
                       size="lg"
                       className="hover:bg-slate-100 rounded-lg"
                     >
-                      <Settings className={`transition-colors duration-200 ${pathname === '/settings' ? 'text-blue-600' : 'text-slate-600'
-                        }`} />
+                      <Settings className={`transition-colors duration-200 ${
+                        pathname === '/settings' ? 'text-blue-600' : 'text-slate-600'
+                      }`} />
                       <span className={pathname === '/settings' ? 'text-blue-600' : 'text-slate-600'}>
                         Settings
                       </span>
@@ -113,13 +117,13 @@ export default function Dashboard() {
 
         <main className="flex-1 overflow-auto bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 py-8">
-            <section className="mb-12 text-center">
+            <section className="mb-12">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 p-8">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-4">
-                  Welcome to HealthSync
+                <h1 className="text-2xl font-bold text-slate-900 mb-4">
+                  Pulse Records
                 </h1>
-                <p className="text-slate-600 text-lg">
-                  Select Pulse or Notes from the sidebar to manage your health records
+                <p className="text-slate-600">
+                  Track and manage your pulse records here
                 </p>
               </div>
             </section>
