@@ -219,7 +219,7 @@ export default function Reports() {
                           className="text-green-500 hover:text-green-600"
                           onClick={() => {
                             const link = document.createElement("a");
-                            link.href = report.downloadUrl;
+                            link.href = report.downloadUrl!;
                             link.setAttribute("download", report.name); // Force download
                             document.body.appendChild(link);
                             link.click();
