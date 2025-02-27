@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Client, Storage, Databases, ID, Query } from "appwrite";
+import { Client, Storage, Databases, ID } from "appwrite";
 import { useDropzone } from "react-dropzone";
 
 const client = new Client();
