@@ -1,4 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, RecaptchaVerifier } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -9,6 +11,20 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase only once
-export const firebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
+// Initialize Firebase only once
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { auth, db };
+
+
+export const initRecaptcha = (elementId: string) => {
+  return new RecaptchaVerifier(auth, elementId, {
+    'size': 'invisible',
+    'callback': () => {
+      // reCAPTCHA solved, allow signInWithPhoneNumber.
+    }
+  });
+};
