@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Sidebar } from "@/components/ui/sidebar";
+import PageWrapper from "@/components/PageWrapper";
 import UpdateProfile from "@/components/UpdateProfile";
 import { useAuth } from "@/context/AuthContext";
 
@@ -11,10 +11,10 @@ export default function ProfilePage() {
   } // Replace with actual user ID
 
   return (
-    <Sidebar>
+    <PageWrapper>
       <div className="container mx-auto p-4">
         <UpdateProfile userId={session.authState.user.uid} />
       </div>
-    </Sidebar>
+    </PageWrapper>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Client, Storage, Databases, ID } from "appwrite";
 import { useDropzone } from "react-dropzone";
-import { Sidebar } from "@/components/ui/sidebar";
+import PageWrapper from "@/components/PageWrapper";
 import { Plus, Download } from "lucide-react";
 import { TiPin, TiPinOutline } from "react-icons/ti";
 
@@ -234,7 +234,7 @@ export default function Notes() {
 
   return (
     <>
-      <Sidebar>
+      <PageWrapper>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">My Space 🚀</h1>
@@ -372,7 +372,7 @@ export default function Notes() {
             </div>
           </div>
         </div>
-      </Sidebar>
+      </PageWrapper>
 
       {/* Add Note Button */}
       <button

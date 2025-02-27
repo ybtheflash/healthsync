@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
@@ -26,6 +26,7 @@ interface Props {
 
 const AddMedicationForm = ({ medication }: Props) => {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [isPending, startTransition] = useTransition();
   const [timings, setTimings] = useState<TimingEntry[]>(medication?.timings || []);
   const [customTime, setCustomTime] = useState("");
@@ -82,7 +83,7 @@ const AddMedicationForm = ({ medication }: Props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const formData = new FormData(formRef.current as HTMLFormElement);
 
     if (!authState.user?.uid) {
       setFormError("User not authenticated");
@@ -119,7 +120,7 @@ const AddMedicationForm = ({ medication }: Props) => {
         }
 
         // Clear the form
-        (e.currentTarget as HTMLFormElement).reset();
+        formRef.current?.reset();
         setTimings([]);
         setCustomTime("");
         // Refresh medications list by triggering a reload of the current page
@@ -139,7 +140,7 @@ const AddMedicationForm = ({ medication }: Props) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
         <h2 className="text-xl font-bold">
           {medication ? "Edit Medication" : "Add New Medication"}
         </h2>

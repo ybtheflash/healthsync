@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/ui/sidebar";
+import PageWrapper from "@/components/PageWrapper";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -145,7 +145,7 @@ export default function Reports() {
 
   return (
     <ProtectedRoute>
-      <Sidebar>
+      <PageWrapper>
         <div className="space-y-6">
           <h1 className="text-3xl font-bold">Medical Reports</h1>
           <p className="text-muted-foreground">
@@ -244,7 +244,7 @@ export default function Reports() {
             </div>
           )}
         </div>
-      </Sidebar>
+      </PageWrapper>
       <Toaster />
     </ProtectedRoute>
   );
