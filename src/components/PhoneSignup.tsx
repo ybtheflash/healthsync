@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 // components/PhoneSignup.tsx
 import React, { useState, useRef, useEffect } from "react";
@@ -85,6 +86,7 @@ const PhoneSignup: React.FC = () => {
     try {
       await verifyOTP(confirmationResult, otp);
       setCurrentStep(SignupStep.USER_DETAILS);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setFormError(error.message || "Invalid OTP. Please try again.");
     }
@@ -124,6 +126,7 @@ const PhoneSignup: React.FC = () => {
       });
 
       router.push("/dashboard");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setFormError(error.message || "Failed to complete signup. Please try again.");
     }
@@ -165,7 +168,7 @@ const PhoneSignup: React.FC = () => {
         return (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <h2 className="text-xl font-bold">Verify OTP</h2>
-            <p className="text-sm">We've sent a verification code to {phoneNumber}</p>
+            <p className="text-sm">We&apos;ve sent a verification code to {phoneNumber}</p>
             <div>
               <label htmlFor="otp" className="block text-sm font-medium">
                 Enter 6-digit OTP

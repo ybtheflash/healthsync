@@ -64,7 +64,7 @@ export function Sidebar({ children }: SidebarProps) {
     {
       title: "Settings",
       icon: Settings,
-      href: "/settings",
+      href: "/profile",
     },
   ]
 
@@ -116,7 +116,7 @@ export function Sidebar({ children }: SidebarProps) {
             )}
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <HeartPulse className="h-5 w-5" />
+              <HeartPulse className="h-6 w-6" />
             </div>
             {!isCollapsed && <span className="text-xl font-bold text-blue-600">HealthSync</span>}
           </div>
@@ -128,7 +128,7 @@ export function Sidebar({ children }: SidebarProps) {
             <TabsList className="w-full grid grid-cols-2">
               <Link href="/pulse" className="w-full">
                 <TabsTrigger value="/pulse" className="flex items-center gap-2 w-full">
-                  <HeartPulse className="h-4 w-4" />
+                  <HeartPulse className="h-5 w-5" />
                   {!isCollapsed && "Pulse"}
                 </TabsTrigger>
               </Link>

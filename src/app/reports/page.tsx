@@ -56,7 +56,7 @@ export default function Reports() {
       }));
 
       setReports(files);
-    } catch (error) {
+    } catch {
       toast.error("Failed to fetch reports");
     }
   };
@@ -135,7 +135,7 @@ export default function Reports() {
           fileId
         );
         toast.success("File deleted successfully!");
-      } catch (error) {
+      } catch {
         toast.error("Failed to delete file from storage");
         return;
       }
@@ -211,7 +211,7 @@ export default function Reports() {
                     <div>{report.size}</div>
 
                     {/* Actions - Download & Delete */}
-                    <div className="text-right flex gap-2">
+                    <div className="text-right flex gap-2 items-center justify-end">
                       {report.downloadUrl && (
                         <Button
                           variant="ghost"

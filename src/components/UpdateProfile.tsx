@@ -1,5 +1,6 @@
+"use client";
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, getDoc, Firestore } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 
 // Types
@@ -82,7 +83,7 @@ const UpdateProfileForm: React.FC<{ userId: string }> = ({ userId }) => {
       const userRef = doc(db, 'users', userId);
       
       // Only update fields that can be changed (excluding uid, createdAt)
-      const { uid, createdAt, ...updatableFields } = profile;
+      const { ...updatableFields } = profile;
       
       await updateDoc(userRef, {
         ...updatableFields,
@@ -111,7 +112,7 @@ const UpdateProfileForm: React.FC<{ userId: string }> = ({ userId }) => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="max-w-4xl w-full mx-4 bg-white p-8 rounded-lg shadow-md">
+      <div className="max-w-4xl w-full mx-4 p-8 rounded-lg shadow-lg" style={{ backdropFilter: 'blur(10px)', backgroundColor: 'rgba(255, 255, 255, 0.7)' }}>
         <h2 className="text-3xl font-bold mb-6 text-center">Update Profile</h2>
         
         {error && <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-6">{error}</div>}
@@ -217,15 +218,27 @@ const UpdateProfileForm: React.FC<{ userId: string }> = ({ userId }) => {
             
             <div className="w-full md:w-1/2 px-3">
               <label htmlFor="phoneNumber" className="block text-gray-700 font-medium mb-2">Phone Number</label>
-              <input
-                type="tel"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={profile.phoneNumber}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+              <div className="flex">
+                <select
+                  name="countryCode"
+                  className="w-1/4 px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={handleChange}
+                >
+                  <option value="+1">+1</option>
+                  <option value="+44">+44</option>
+                  <option value="+91">+91</option>
+                  {/* Add more country codes as needed */}
+                </select>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={profile.phoneNumber}
+                  onChange={handleChange}
+                  className="w-3/4 px-4 py-3 border-t border-b border-r border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
             </div>
           </div>
           

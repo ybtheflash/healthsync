@@ -34,22 +34,26 @@ const RenderAllMedications = () => {
         setLoading(false);
         return;
       }
-
+    
       try {
         const medicationsQuery = query(
           collection(db, "medications"),
           where("userId", "==", authState.user.uid),
           orderBy("name")
         );
-
+    
         const querySnapshot = await getDocs(medicationsQuery);
         const meds = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Medication[];
         setMedications(meds);
-      } catch (err: any) {
-        setError(err.message || "Failed to load medications");
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message || "Failed to load medications");
+        } else {
+          setError("Failed to load medications");
+        }
       } finally {
         setLoading(false);
       }
@@ -78,14 +82,6 @@ const RenderAllMedications = () => {
     }
   };
 
-  // Format date display
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const handleEditMedication = (id: string) => {
     router.push(`/medications/edit/${id}`);
@@ -130,12 +126,11 @@ const RenderAllMedications = () => {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-6">Your Medications</h2>
-
+    
       <div className="space-y-4">
         {medications.map((med) => (
           <div
             key={med.id}
-            onClick={() => handleEditMedication(med.id)}
             className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
           >
             <div className="flex justify-between items-start">
@@ -143,28 +138,50 @@ const RenderAllMedications = () => {
                 <h3 className="text-xl font-semibold">{med.name}</h3>
                 <p className="text-sm text-gray-600">{med.dosage}</p>
               </div>
-              <button
-                onClick={() => handleDeleteMedication(med.id)}
-                className="p-2 text-red-500 hover:text-red-700"
-                title="Delete Medication"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditMedication(med.id)}
+                  className="p-2 text-blue-500 hover:text-blue-700"
+                  title="Edit Medication"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536M9 11l3.536 3.536m-2.036-2.036l-3.536 3.536a2 2 0 01-2.828 0l-1.414-1.414a2 2 0 010-2.828l3.536-3.536m2.036 2.036L9 11m0 0l3.536-3.536M9 11l-3.536 3.536"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleDeleteMedication(med.id)}
+                  className="p-2 text-red-500 hover:text-red-700"
+                  title="Delete Medication"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-
+    
             <div className="mt-4">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Schedule:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -188,7 +205,7 @@ const RenderAllMedications = () => {
                 ))}
               </div>
             </div>
-
+    
             <div className="mt-4 text-sm text-gray-600">
               Duration: {med.days} day{med.days > 1 ? "s" : ""}
             </div>

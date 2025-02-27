@@ -35,7 +35,6 @@ export default function Notes() {
   const [files, setFiles] = useState<{ name: string; id: string; url?: string }[]>([]);
   const [inputNote, setInputNote] = useState("");
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
-  const [emoji, setEmoji] = useState("🚀");
   const [selectedColor, setSelectedColor] = useState<NoteColor>('blue');
 
   // File upload modal state
@@ -238,43 +237,7 @@ export default function Notes() {
       <Sidebar>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              My Space
-              <span className="ml-2">
-                <select
-                  className="text-lg"
-                  onChange={(e) => setEmoji(e.target.value)}
-                  value={emoji}
-                >
-                  <option value="📄">📄</option> {/* Document */}
-                  <option value="💊">💊</option> {/* Medication */}
-                  <option value="📊">📊</option> {/* Reports */}
-                  <option value="📝">📝</option> {/* Notes */}
-                  <option value="🔍">🔍</option> {/* Search */}
-                </select>
-              </span>
-            </h1>
-          </div>
-
-          {/* Drag and Drop Area */}
-          <div
-            {...getRootProps()}
-            className={`
-              border-2 border-dashed border-gray-300 rounded-lg p-6 
-              text-center transition-colors cursor-pointer
-              hover:border-blue-500 hover:bg-blue-50
-              ${isDragActive ? "border-blue-500 bg-blue-50" : ""}
-            `}
-          >
-            <input {...getInputProps()} />
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">
-                {isDragActive ? "Drop files here..." : "Drag & drop files here, or click to select"}
-              </p>
-              <p className="text-xs text-gray-500">
-                Supported formats: PNG, JPG, GIF
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">My Space 🚀</h1>
           </div>
 
           <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
@@ -305,7 +268,7 @@ export default function Notes() {
                           className="text-sm text-red-600 hover:text-red-800"
                           onClick={() => deleteNote(note.id)}
                         >
-                          Delete
+                          <span className="px-2 py-1 border border-red-600 rounded-md hover:bg-red-100">Delete</span>
                         </button>
                       </div>
                     </div>
@@ -334,7 +297,7 @@ export default function Notes() {
                     </div>
                     <div className="flex justify-end space-x-2">
                       <button
-                        className="text-sm text-red-600 hover:text-red-800"
+                        className="text-sm text-red-600 hover:text-red-800 px-2 py-1 border border-red-600 rounded-md hover:bg-red-100"
                         onClick={() => deleteNote(note.id)}
                       >
                         Delete
@@ -347,27 +310,60 @@ export default function Notes() {
 
             {/* Attachments Section */}
             <div className="space-y-6">
+              <div
+                {...getRootProps()}
+                className={`
+                  border-2 border-dashed border-gray-300 rounded-lg p-6 
+                  text-center transition-colors cursor-pointer
+                  hover:border-blue-500 hover:bg-blue-50
+                  ${isDragActive ? "border-blue-500 bg-blue-50" : ""}
+                `}
+              >
+                <input {...getInputProps()} />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">
+                    {isDragActive ? "Drop files here..." : "Drag & drop files here, or click to select"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Supported formats: PNG, JPG, GIF
+                  </p>
+                </div>
+              </div>
+
               {files.length > 0 && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                   <h3 className="text-sm font-medium text-gray-900 mb-4">Uploaded Files</h3>
                   <ul className="space-y-2">
                     {files.map((file) => (
-                      <li key={file.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200">
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 truncate max-w-[200px] font-medium"
-                          download
-                        >
-                          {file.name}
-                        </a>
-                        <button
-                          onClick={() => deleteFile(file.id)}
-                          className="text-sm text-red-600 hover:text-red-800 ml-4"
-                        >
-                          Delete
-                        </button>
+                      <li key={file.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
+                        <div className="flex-1 min-w-0 mr-2">
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 truncate block"
+                          >
+                            {file.name}
+                          </a>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => downloadFile(file.url, file.name, file.id)}
+                            disabled={downloadingFiles[file.id]}
+                            className={`text-sm ${downloadingFiles[file.id] ? 'text-gray-400' : 'text-green-600 hover:text-green-800'} flex items-center px-2 py-1 border border-green-600 rounded-md hover:bg-green-100`}
+                            title="Download file"
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            <span>{downloadingFiles[file.id] ? 'Downloading...' : 'Download'}</span>
+                          </button>
+                          <button
+                            onClick={() => deleteFile(file.id)}
+                            className="text-sm text-red-600 hover:text-red-800 px-2 py-1 border border-red-600 rounded-md hover:bg-red-100"
+                            disabled={downloadingFiles[file.id]}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
