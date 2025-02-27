@@ -134,7 +134,7 @@ export function Sidebar({ children }: SidebarProps) {
               <Link href="/notes" className="w-full">
                 <TabsTrigger value="notes" className="flex items-center gap-2 w-full">
                   <FileText className="h-4 w-4" />
-                  {!isCollapsed && "Notes"}
+                  {!isCollapsed && "MySpace"}
                 </TabsTrigger>
               </Link>
             </TabsList>
