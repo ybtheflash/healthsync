@@ -184,6 +184,8 @@ export default function Home() {
                   value={editText[note.id] || ""}
                   onChange={(e) => setEditText({ ...editText, [note.id]: e.target.value })}
                   className="w-full p-2 border min-h-[50px] outline-none"
+                  placeholder="Edit your note here..."
+                  title="Edit Note"
                 ></textarea>
                 <div className="flex justify-end mt-2">
                   <button className="bg-green-500 text-white px-3 py-1 mx-1 rounded" onClick={() => saveEdit(note.id)}>
