@@ -6,7 +6,7 @@ import { FeatureCarousel } from '@/components/ui/feature-carousel';
 
 const Signup: NextPage = () => {
   return (
-    <div className="min-h-screen flex items-stretch flex-row-reverse">
+    <div className="min-h-screen flex items-stretch">
       {/* Form Side */}
       <div className="w-full md:w-[480px] flex-none p-8 bg-white flex items-center">
         <div className="w-full max-w-sm mx-auto">
