@@ -72,6 +72,7 @@ const RenderAllMedications = () => {
 
       // Update local state to remove the deleted medication
       setMedications((prev) => prev.filter((med) => med.id !== id));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || "Failed to delete medication");
     }

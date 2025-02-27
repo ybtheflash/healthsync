@@ -3,7 +3,7 @@
 import * as React from "react"
 import { FileText, HeartPulse, Settings, X, LogOut, PanelLeft } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -18,6 +18,7 @@ export function Sidebar({ children }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobileOpen, setIsMobileOpen] = React.useState(false)
   const router = useRouter()
+  const pathname = usePathname()
   const { signout } = useAuth()
 
   const handleLogout = async () => {
@@ -53,7 +54,7 @@ export function Sidebar({ children }: SidebarProps) {
     {
       title: "Medkit",
       icon: HeartPulse,
-      href: "/medkit",
+      href: "/medications",
     },
     {
       title: "Reports",
@@ -123,16 +124,16 @@ export function Sidebar({ children }: SidebarProps) {
 
         {/* Tabs */}
         <div className="p-2">
-          <Tabs defaultValue="pulse" className="w-full">
+          <Tabs defaultValue="/pulse" value={pathname} className="w-full">
             <TabsList className="w-full grid grid-cols-2">
               <Link href="/pulse" className="w-full">
-                <TabsTrigger value="pulse" className="flex items-center gap-2 w-full">
+                <TabsTrigger value="/pulse" className="flex items-center gap-2 w-full">
                   <HeartPulse className="h-4 w-4" />
                   {!isCollapsed && "Pulse"}
                 </TabsTrigger>
               </Link>
               <Link href="/notes" className="w-full">
-                <TabsTrigger value="notes" className="flex items-center gap-2 w-full">
+                <TabsTrigger value="/notes" className="flex items-center gap-2 w-full">
                   <FileText className="h-4 w-4" />
                   {!isCollapsed && "MySpace"}
                 </TabsTrigger>
@@ -149,8 +150,8 @@ export function Sidebar({ children }: SidebarProps) {
                 variant="ghost"
                 className={cn("w-full", isCollapsed ? "justify-center px-2" : "justify-start")}
               >
-                <item.icon className={cn("h-5 w-5", !isCollapsed && "mr-2")} />
-                {!isCollapsed && <span>{item.title}</span>}
+                <item.icon className={cn("h-8 w-8", !isCollapsed && "mr-2")} />
+                {!isCollapsed && <span className="text-xl">{item.title}</span>}
               </Button>
             </Link>
           ))}
@@ -186,7 +187,7 @@ export function Sidebar({ children }: SidebarProps) {
       <main
         className={cn(
           "flex-1 transition-all duration-300 ease-in-out",
-          isCollapsed ? "md:ml-0" : "md:ml-[240px]",
+          "md:ml-[240px]",
           "pl-16"
         )}
       >

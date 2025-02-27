@@ -118,7 +118,12 @@ const AddMedicationForm = ({ medication }: Props) => {
           await addDoc(collection(db, "medications"), medicationData);
         }
 
-        router.push("/dashboard");
+        // Clear the form
+        (e.currentTarget as HTMLFormElement).reset();
+        setTimings([]);
+        setCustomTime("");
+        // Refresh medications list by triggering a reload of the current page
+        router.refresh();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         setFormError(error.message || "Failed to save medication");
