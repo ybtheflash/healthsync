@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Client, Storage, Databases, ID } from "appwrite";
 import { useDropzone } from "react-dropzone";
 import { Sidebar } from "@/components/ui/sidebar";
-import { Plus } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 import { TiPin, TiPinOutline } from "react-icons/ti";
 
 const client = new Client();
@@ -41,6 +41,9 @@ export default function Notes() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [customFileName, setCustomFileName] = useState("");
+  
+  // Loading state for download buttons
+  const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchFiles();
@@ -189,6 +192,41 @@ export default function Notes() {
     }
   };
 
+  // Function to download a file directly using fetch API
+  const downloadFile = async (url: string | undefined, fileName: string, fileId: string) => {
+    if (!url) return;
+    
+    try {
+      // Set loading state for this file
+      setDownloadingFiles(prev => ({ ...prev, [fileId]: true }));
+      
+      // Fetch the file
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      // Create object URL from blob
+      const objectUrl = window.URL.createObjectURL(blob);
+      
+      // Create download link and trigger download
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = fileName; // Set suggested filename
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download file. Please try again.");
+    } finally {
+      // Reset loading state
+      setDownloadingFiles(prev => ({ ...prev, [fileId]: false }));
+    }
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   const pinnedNotes = notes.filter(note => note.pinned);
@@ -298,20 +336,34 @@ export default function Notes() {
                   <ul className="space-y-2">
                     {files.map((file) => (
                       <li key={file.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 truncate max-w-[200px]"
-                        >
-                          {file.name}
-                        </a>
-                        <button
-                          onClick={() => deleteFile(file.id)}
-                          className="text-sm text-red-600 hover:text-red-800"
-                        >
-                          Delete
-                        </button>
+                        <div className="flex-1 min-w-0 mr-2">
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 truncate block"
+                          >
+                            {file.name}
+                          </a>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => downloadFile(file.url, file.name, file.id)}
+                            disabled={downloadingFiles[file.id]}
+                            className={`text-sm ${downloadingFiles[file.id] ? 'text-gray-400' : 'text-green-600 hover:text-green-800'} flex items-center`}
+                            title="Download file"
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            <span>{downloadingFiles[file.id] ? 'Downloading...' : 'Download'}</span>
+                          </button>
+                          <button
+                            onClick={() => deleteFile(file.id)}
+                            className="text-sm text-red-600 hover:text-red-800"
+                            disabled={downloadingFiles[file.id]}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
