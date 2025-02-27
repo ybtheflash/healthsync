@@ -3,7 +3,9 @@
 import * as React from "react"
 import { FileText, HeartPulse, Settings, X, LogOut, PanelLeft } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/AuthContext"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -15,6 +17,17 @@ interface SidebarProps {
 export function Sidebar({ children }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobileOpen, setIsMobileOpen] = React.useState(false)
+  const router = useRouter()
+  const { signout } = useAuth()
+
+  const handleLogout = async () => {
+    try {
+      await signout()
+      router.push('/login')
+    } catch (error) {
+      console.error('Failed to logout:', error)
+    }
+  }
 
   // Handle window resize
   React.useEffect(() => {
@@ -145,7 +158,16 @@ export function Sidebar({ children }: SidebarProps) {
 
         {/* User/Logout */}
         <div className="border-t p-2">
-          <Button variant="ghost" className={cn("w-full", isCollapsed ? "justify-center px-2" : "justify-start")}>
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full",
+              isCollapsed ? "justify-center px-2" : "justify-start",
+              "bg-red-50/10 hover:bg-red-500/20 text-red-600 hover:text-red-700",
+              "backdrop-blur-sm transition-colors"
+            )}
+            onClick={handleLogout}
+          >
             {isCollapsed ? (
               <LogOut className="h-5 w-5" />
             ) : (
