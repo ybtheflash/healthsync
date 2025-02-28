@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import Loader from '@/components/ui/Loader';
 
-interface PageWrapperProps {
+interface PageWrapper2Props {
   children: React.ReactNode;
 }
 
-export default function PageWrapper2({ children }: PageWrapperProps) {
+export default function PageWrapper2({ children }: PageWrapper2Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
