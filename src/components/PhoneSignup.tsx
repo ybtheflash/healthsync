@@ -1,5 +1,5 @@
 "use client";
-// components/PhoneSignup.tsx
+export const dynamic = 'force-dynamic';
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext"; // Ensure this context is implemented correctly
 import PhoneInput from "react-phone-number-input";

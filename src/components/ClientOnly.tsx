@@ -1,6 +1,6 @@
 // components/ClientOnly.jsx
 "use client";
-
+export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
 
 import { ReactNode } from 'react';
