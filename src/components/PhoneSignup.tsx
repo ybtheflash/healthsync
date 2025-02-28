@@ -7,6 +7,7 @@ import "react-phone-number-input/style.css";
 import { ConfirmationResult } from "firebase/auth";
 import { Gender, MaritalStatus } from "@/lib/types/user";
 import { useRouter } from "next/navigation";
+import { FirebaseError } from "firebase/app"; // Import FirebaseError for better error typing
 
 enum SignupStep {
   PHONE_INPUT,
@@ -73,8 +74,9 @@ const PhoneSignup: React.FC = () => {
       const result = await sendOTP(phoneNumber, "recaptcha-container");
       setConfirmationResult(result);
       setCurrentStep(SignupStep.OTP_VERIFICATION);
-    } catch (error: any) {
-      setFormError(error.message || "Failed to send OTP. Please try again.");
+    } catch (error: unknown) { // Specify the error type
+      const firebaseError = error as FirebaseError;
+      setFormError(firebaseError.message || "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +103,9 @@ const PhoneSignup: React.FC = () => {
     try {
       await verifyOTP(confirmationResult, otp);
       setCurrentStep(SignupStep.USER_DETAILS);
-    } catch (error: any) {
-      setFormError(error.message || "Invalid OTP. Please try again.");
+    } catch (error: unknown) { // Specify the error type
+      const firebaseError = error as FirebaseError;
+      setFormError(firebaseError.message || "Invalid OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -146,8 +149,9 @@ const PhoneSignup: React.FC = () => {
       });
 
       router.push("/dashboard");
-    } catch (error: any) {
-      setFormError(error.message || "Failed to complete signup. Please try again.");
+    } catch (error: unknown) { // Specify the error type
+      const firebaseError = error as FirebaseError;
+      setFormError(firebaseError.message || "Failed to complete signup. Please try again.");
       setIsLoading(false);
     }
   };

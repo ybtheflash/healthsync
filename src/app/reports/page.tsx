@@ -55,7 +55,7 @@ export default function Reports() {
     } catch {
       toast.error("Failed to fetch reports");
     }
-  }, [storage]);
+  }, []);
 
   useEffect(() => {
     fetchReports();
