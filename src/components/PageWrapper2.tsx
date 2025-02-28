@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from 'react';
+import React, { ReactNode, useEffect, useState } from 'react';
 import Loader from '@/components/ui/Loader';
 
 interface PageWrapper2Props {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export default function PageWrapper2({ children }: PageWrapper2Props) {
+const PageWrapper2: React.FC<PageWrapper2Props> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function PageWrapper2({ children }: PageWrapper2Props) {
     );
   }
 
-  return (
-      {children}
-  );
-}
+  return <div>{children}</div>;
+};
+
+export default PageWrapper2;
