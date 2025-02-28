@@ -4,8 +4,8 @@ import HomePage from '@/components/HomePage';
 
 export default function Home() {
   return (
-    <PageWrapper>
+    <PageWrapper2>
       <HomePage />
-    </PageWrapper>
+    </PageWrapper2>
   );
 }

@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect, useState } from 'react';
-import { Sidebar } from '@/components/ui/sidebar';
 import Loader from '@/components/ui/Loader';
 
 interface PageWrapperProps {
   children: React.ReactNode;
 }
 
-export default function PageWrapper({ children }: PageWrapperProps) {
+export default function PageWrapper2({ children }: PageWrapperProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,8 +28,6 @@ export default function PageWrapper({ children }: PageWrapperProps) {
   }
 
   return (
-    <Sidebar>
       {children}
-    </Sidebar>
   );
 }
