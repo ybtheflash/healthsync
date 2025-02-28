@@ -198,7 +198,7 @@ const PhoneSignup: React.FC = () => {
         return (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <h2 className="text-xl font-bold text-blue-700">Verify OTP</h2>
-            <p className="text-sm">We've sent a verification code to {phoneNumber}</p>
+            <p className="text-sm">We&apos;ve sent a verification code to {phoneNumber}</p>
             <div className="space-y-1">
               <label htmlFor="otp" className="block text-sm font-medium">
                 Enter 6-digit OTP
