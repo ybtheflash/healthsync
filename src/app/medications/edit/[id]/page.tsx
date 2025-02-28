@@ -1,51 +1,32 @@
-import { useEffect, useState, use } from "react";
+"use client";
+
+import { useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import AddMedicationForm from "@/components/AddMedicationForm";
 import PageWrapper from "@/components/PageWrapper";
+import { GetServerSideProps } from "next";
 
-export default function EditMedicationPage({ params }: { params: Promise<{ id: string }> }) {
-  interface Medication {
-    id: string;
-    name: string;
-    dosage: string;
-    timings: Array<{
-      time: string;
-      relation: "before" | "after";
-      isCustom: boolean;
-    }>;
-    startDate: Date;
-    endDate: Date;
-    days: number;
-  }
-  
-  const [medication, setMedication] = useState<Medication | null>(null);
-  const [loading, setLoading] = useState(true);
-  const resolvedParams = use(params);
+interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  timings: Array<{
+    time: string;
+    relation: "before" | "after";
+    isCustom: boolean;
+  }>;
+  startDate: Date;
+  endDate: Date;
+  days: number;
+}
 
-  useEffect(() => {
-    const fetchMedication = async () => {
-      try {
-        const docSnap = await getDoc(doc(db, "medications", resolvedParams.id));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setMedication({
-            id: docSnap.id,
-            name: data.name,
-            dosage: data.dosage,
-            timings: data.timings,
-            startDate: data.startDate?.toDate() || new Date(),
-            endDate: data.endDate?.toDate() || new Date(),
-            days: data.days,
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+interface EditMedicationPageProps {
+  medication: Medication | null;
+}
 
-    fetchMedication();
-  }, [resolvedParams.id]);
+export default function EditMedicationPage({ medication }: EditMedicationPageProps) {
+  const [loading, setLoading] = useState(false);
 
   if (loading) {
     return null; // Let PageWrapper handle loading state
@@ -58,7 +39,7 @@ export default function EditMedicationPage({ params }: { params: Promise<{ id: s
       </div>
     );
   }
-  
+
   return (
     <PageWrapper>
       <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -68,3 +49,32 @@ export default function EditMedicationPage({ params }: { params: Promise<{ id: s
     </PageWrapper>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params as { id: string };
+  let medication: Medication | null = null;
+
+  try {
+    const docSnap = await getDoc(doc(db, "medications", id));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      medication = {
+        id: docSnap.id,
+        name: data.name,
+        dosage: data.dosage,
+        timings: data.timings,
+        startDate: data.startDate?.toDate() || new Date(),
+        endDate: data.endDate?.toDate() || new Date(),
+        days: data.days,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching medication:", error);
+  }
+
+  return {
+    props: {
+      medication,
+    },
+  };
+};
