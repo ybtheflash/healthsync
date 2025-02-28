@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import React from "react";
 import PageWrapper from "@/components/PageWrapper";
 import UpdateProfile from "@/components/UpdateProfile";
