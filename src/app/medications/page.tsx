@@ -1,16 +1,13 @@
-"use client";
-
 import PageWrapper from '@/components/PageWrapper';
-import RenderAllMedicationsWrapper from '@/components/RenderAllMedicationsWrapper';
+import ClientOnly from '@/components/ClientOnly';
+import RenderAllMedications from '@/components/getAllMedications';
 
-const MedicationsPage = () => {
+export default function MedicationsPage() {
   return (
     <PageWrapper>
-      <div>
-        <RenderAllMedicationsWrapper />
-      </div>
+      <ClientOnly fallback={<div>Loading medications...</div>}>
+        <RenderAllMedications />
+      </ClientOnly>
     </PageWrapper>
   );
-};
-
-export default MedicationsPage;
+}
