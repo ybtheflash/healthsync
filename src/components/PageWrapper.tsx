@@ -1,7 +1,6 @@
 "use client"
 export const dynamic = 'force-dynamic';
 import { useEffect, useState } from 'react';
-import { Sidebar } from '@/components/ui/sidebar';
 import Loader from '@/components/ui/Loader';
 
 interface PageWrapperProps {
@@ -29,8 +28,6 @@ export default function PageWrapper({ children }: PageWrapperProps) {
   }
 
   return (
-    <Sidebar>
       {children}
-    </Sidebar>
   );
 }
