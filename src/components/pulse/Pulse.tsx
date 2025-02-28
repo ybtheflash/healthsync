@@ -6,7 +6,6 @@ import { PulseInput } from "./PulseInput";
 import { PulseFileUpload } from "./PulseFileUpload";
 import { streamDocumentAnalysis, streamPulseQuery } from "@/lib/api/pulse-client";
 
-
 interface Source {
   title: string;
   url: string;
@@ -80,7 +79,7 @@ export function Pulse() {
             )
           );
         },
-        (sources: any, suggestedQueries: any) => {
+        (sources: Source[], suggestedQueries?: string[]) => {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === loadingMessageId
@@ -94,7 +93,7 @@ export function Pulse() {
           );
           setIsLoading(false);
         },
-        (error: { message: any; }) => {
+        (error: { message: string }) => {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === loadingMessageId
@@ -161,7 +160,7 @@ export function Pulse() {
             )
           );
         },
-        (sources: any, suggestedQueries: any) => {
+        (sources: Source[], suggestedQueries?: string[]) => {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === loadingMessageId
@@ -175,7 +174,7 @@ export function Pulse() {
           );
           setIsLoading(false);
         },
-        (error: { message: any; }) => {
+        (error: { message: string }) => {
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === loadingMessageId

@@ -1,4 +1,4 @@
-import { ThumbsUp, ThumbsDown, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { ThumbsUp, ThumbsDown, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -30,7 +30,7 @@ export function PulseMessage({ message, onQueryClick }: MessageProps) {
     try {
       const date = new Date(isoString);
       return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } catch (e) {
+    } catch {
       return "";
     }
   };

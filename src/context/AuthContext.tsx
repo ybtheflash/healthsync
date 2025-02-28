@@ -56,7 +56,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     loading: true,
     error: null
   });
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [tempUserData, setTempUserData] = useState<SignupData | null>(null);
 
   useEffect(() => {
@@ -81,7 +80,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
               error: null
             });
           }
-        } catch (error) {
+        } catch {
           setAuthState({
             user: null,
             loading: false,
@@ -104,10 +103,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     try {
       const recaptchaVerifier = initRecaptcha(recaptchaId);
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
-      setConfirmationResult(result);
       return result;
-    } catch (error: any) {
-      setAuthState(prev => ({ ...prev, error: error.message }));
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message;
+      setAuthState(prev => ({ ...prev, error: errorMessage }));
       throw error;
     }
   };
@@ -121,8 +120,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       if (tempUserData && auth.currentUser) {
         await signupUser(tempUserData);
       }
-    } catch (error: any) {
-      setAuthState(prev => ({ ...prev, error: error.message }));
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message;
+      setAuthState(prev => ({ ...prev, error: errorMessage }));
       throw error;
     }
   };
@@ -154,8 +154,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         loading: false,
         error: null
       });
-    } catch (error: any) {
-      setAuthState(prev => ({ ...prev, error: error.message }));
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message;
+      setAuthState(prev => ({ ...prev, error: errorMessage }));
       throw error;
     }
   };
@@ -168,8 +169,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         loading: false,
         error: null
       });
-    } catch (error: any) {
-      setAuthState(prev => ({ ...prev, error: error.message }));
+    } catch (error: unknown) {
+      const errorMessage = (error as Error).message;
+      setAuthState(prev => ({ ...prev, error: errorMessage }));
       throw error;
     }
   };

@@ -7,12 +7,6 @@ interface Source {
   snippet: string;
 }
 
-interface PulseResponse {
-  content: string;
-  sources: Source[];
-  suggestedQueries?: string[];
-}
-
 interface PulseError {
   message: string;
 }
@@ -65,7 +59,7 @@ export async function streamPulseQuery(
           .map(line => {
             try {
               return JSON.parse(line);
-            } catch (e) {
+            } catch {
               return null;
             }
           })
@@ -89,7 +83,7 @@ export async function streamPulseQuery(
         } else {
           partialChunk = '';
         }
-      } catch (e) {
+      } catch {
         // If we fail to parse, store the chunk for combining with the next one
         partialChunk = combinedChunk;
       }
@@ -152,7 +146,7 @@ export async function streamDocumentAnalysis(
           .map(line => {
             try {
               return JSON.parse(line);
-            } catch (e) {
+            } catch {
               return null;
             }
           })
@@ -176,7 +170,7 @@ export async function streamDocumentAnalysis(
         } else {
           partialChunk = '';
         }
-      } catch (e) {
+      } catch {
         // If we fail to parse, store the chunk for combining with the next one
         partialChunk = combinedChunk;
       }
@@ -293,8 +287,10 @@ export const usePulseClient = () => {
 };
 
 // For use with API routes
+import { NextApiResponse } from 'next';
+
 export const streamResponse = async (
-  res: any,
+  res: NextApiResponse,
   callback: (
     onChunk: (chunk: string) => void,
     onComplete: (sources: Source[], suggestedQueries?: string[]) => void,

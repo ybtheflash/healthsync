@@ -48,7 +48,6 @@ IMPORTANT GUIDELINES:
 
 Your primary purpose is to provide reliable medical information and chat in a friendly manner. Keep responses clear, complete, and well-structured.`;
 
-
       // Create a properly formatted query
       let promptContent = query;
       if (isMedicalQuery) {
@@ -90,7 +89,7 @@ Please include:
         try {
           const errorData = await response.json();
           errorMessage = errorData.error?.message || errorData.message || errorMessage;
-        } catch (e) {
+        } catch {
           // If parsing JSON fails, use the status text
         }
         throw new Error(`Perplexity API error: ${errorMessage}`);
@@ -145,7 +144,7 @@ Please include:
               const text = data.choices[0].delta.content;
               processToken(text);
             }
-          } catch (e) {
+          } catch {
             // Skip invalid JSON
           }
         }
@@ -159,9 +158,12 @@ Please include:
         await generateSuggestedQueries(query, fullContent, apiKey) : 
         [];
       
+      // Clean the content
+      const cleanedContent = cleanContent(fullContent);
+      
       // Complete the process
       onComplete({
-        content: fullContent,
+        content: cleanedContent,
         sources,
         suggestedQueries
       });
@@ -240,8 +242,8 @@ async function isQueryMedical(query: string, apiKey: string): Promise<boolean> {
     const content = data.choices[0]?.message?.content?.toLowerCase() || '';
     
     return content.includes('medical');
-  } catch (e) {
-    console.error("Error classifying query:", e);
+  } catch {
+    console.error("Error classifying query:");
     // Default to treating as medical if classification fails
     return true;
   }
@@ -385,4 +387,9 @@ async function generateSuggestedQueries(
     console.error("Error generating suggested queries:", error);
     return [];
   }
+}
+
+// Helper function to clean content
+function cleanContent(content: string): string {
+  return content.replace(/[\[\]#*]/g, '');
 }

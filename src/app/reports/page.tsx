@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PageWrapper from "@/components/PageWrapper";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { Button } from "@/components/ui/button";
@@ -29,11 +29,7 @@ export default function Reports() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       const response = await storage.listFiles(
         process.env.NEXT_PUBLIC_APPWRITE_BUCKET_ID_REPORTS as string
@@ -59,7 +55,11 @@ export default function Reports() {
     } catch {
       toast.error("Failed to fetch reports");
     }
-  };
+  }, [storage]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 B";
