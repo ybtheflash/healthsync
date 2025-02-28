@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import PageWrapper from '@/components/PageWrapper';
+import PageWrapper from '@/components/PageWrapper2';
 import HomePage from '@/components/HomePage';
 
 export default function Home() {
