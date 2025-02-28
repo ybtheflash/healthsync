@@ -1,5 +1,10 @@
 import PageWrapper from '@/components/PageWrapper';
-import RenderAllMedications from '@/components/getAllMedications';
+import dynamic from 'next/dynamic';
+
+const RenderAllMedications = dynamic(
+  () => import('@/components/getAllMedications'),
+  { ssr: false }
+);
 
 const MedicationsPage = () => {
   return (

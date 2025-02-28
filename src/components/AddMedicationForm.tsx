@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useTransition, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -125,9 +126,12 @@ const AddMedicationForm = ({ medication }: Props) => {
         setCustomTime("");
         // Refresh medications list by triggering a reload of the current page
         router.refresh();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        setFormError(error.message || "Failed to save medication");
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setFormError(error.message || "Failed to save medication");
+        } else {
+          setFormError("Failed to save medication");
+        }
       }
     });
   };

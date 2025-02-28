@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import AddMedicationForm from "@/components/AddMedicationForm";
@@ -21,17 +20,16 @@ interface Medication {
   days: number;
 }
 
-export default function EditMedicationPage() {
+export default function EditMedicationPage({ params }: { params: { id: string } }) {
   const [medication, setMedication] = useState<Medication | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const { id } = router.query;
+  const id = params.id;
 
   useEffect(() => {
     if (id) {
       const fetchMedication = async () => {
         try {
-          const docSnap = await getDoc(doc(db, "medications", id as string));
+          const docSnap = await getDoc(doc(db, "medications", id));
           if (docSnap.exists()) {
             const data = docSnap.data();
             setMedication({
@@ -59,7 +57,7 @@ export default function EditMedicationPage() {
   }, [id]);
 
   if (loading) {
-    return <div>Loading...</div>; // You can replace this with a loading spinner or skeleton
+    return <div>Loading...</div>;
   }
 
   if (!medication) {
