@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import AddMedicationForm from "@/components/AddMedicationForm";
@@ -20,10 +21,11 @@ interface Medication {
   days: number;
 }
 
-export default function EditMedicationPage({ params }: { params: { id: string } }) {
+export default function EditMedicationPage() {
+  const router = useRouter();
+  const { id } = router.query as { id: string };
   const [medication, setMedication] = useState<Medication | null>(null);
   const [loading, setLoading] = useState(true);
-  const id = params.id;
 
   useEffect(() => {
     if (id) {
