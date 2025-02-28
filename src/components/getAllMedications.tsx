@@ -29,11 +29,6 @@ const RenderAllMedications: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const { authState } = useAuth();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   useEffect(() => {
     const fetchMedications = async () => {
@@ -42,14 +37,14 @@ const RenderAllMedications: React.FC = () => {
         setLoading(false);
         return;
       }
-    
+
       try {
         const medicationsQuery = query(
           collection(db, "medications"),
           where("userId", "==", authState.user.uid),
           orderBy("name")
         );
-    
+
         const querySnapshot = await getDocs(medicationsQuery);
         const meds = querySnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -94,8 +89,8 @@ const RenderAllMedications: React.FC = () => {
     return `${hours.padStart(2, "0")}:${minutes}`;
   };
 
-  if (!isClient || loading) {
-    return null;
+  if (loading) {
+    return <div>Loading...</div>; // You can replace this with a loading spinner or skeleton
   }
 
   if (error) {

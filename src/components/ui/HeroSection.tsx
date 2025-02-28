@@ -64,7 +64,7 @@ return (
                             <Link href="/support" className="duration-300 ease-linear hover:text-blue-600">Support</Link>
                         </li>
                         <li>
-                            <Link href="/signin" className="duration-300 ease-linear hover:text-blue-600">Sign In</Link>
+                            <Link href="/login" className="duration-300 ease-linear hover:text-blue-600">Sign In</Link>
                         </li>
                     </ul>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:min-w-max mt-10 lg:mt-0">
