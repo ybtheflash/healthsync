@@ -1,5 +1,3 @@
-"use client"
-
 import PageWrapper from '@/components/PageWrapper';
 import RenderAllMedications from '@/components/getAllMedications';
 

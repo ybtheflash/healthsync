@@ -22,13 +22,18 @@ interface Medication {
   days: number;
 }
 
-const RenderAllMedications = () => {
+const RenderAllMedications: React.FC = () => {
   const router = useRouter();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const { authState } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const fetchMedications = async () => {
@@ -89,7 +94,7 @@ const RenderAllMedications = () => {
     return `${hours.padStart(2, "0")}:${minutes}`;
   };
 
-  if (loading) {
+  if (!isClient || loading) {
     return null;
   }
 
