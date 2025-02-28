@@ -1,122 +1,115 @@
 // /lib/api/groq.ts
-interface CompletionRequest {
-  model: string;
-  prompt: string;
-  max_tokens: number;
-  temperature: number;
-}
-
-interface ChatCompletionRequest {
-  model: string;
-  messages: Array<{
-    role: string;
-    content: string;
-  }>;
-  temperature: number;
-  max_tokens: number;
-  reasoning_format?: string;
-}
-
-interface CompletionResponse {
-  choices: Array<{
-    text: string;
-  }>;
-}
-
-interface ChatCompletionResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
-}
-
-interface ErrorResponse {
-  error?: {
-    message: string;
-    type?: string;
-    code?: string;
-  };
-}
-
 export const GroqAPI = {
-  async generateCompletion(request: CompletionRequest): Promise<CompletionResponse> {
+  async generateChatCompletionStream(params: {
+    model: string;
+    messages: Array<{ role: string; content: string }>;
+    temperature: number;
+    max_tokens: number;
+  }): Promise<ReadableStream<Uint8Array>> {
+    // Check if API key exists
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      throw new Error("Groq API key is not configured. Please add GROQ_API_KEY to your environment variables.");
+    }
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          ...params,
+          max_tokens: params.max_tokens, // Renamed from max_completion_tokens for API compatibility
+          stream: true
+        })
+      });
+
+      if (!response.ok) {
+        const statusCode = response.status;
+        let errorMessage = response.statusText || 'Unknown error';
+        
+        try {
+          const errorData = await response.json();
+          if (errorData && typeof errorData === 'object') {
+            errorMessage = errorData.error?.message || 
+                          errorData.message || 
+                          errorMessage;
+          }
+        } catch (e) {
+          // If parsing JSON fails, use the status text
+        }
+        
+        if (statusCode === 401) {
+          throw new Error("Authentication failed: Please check your Groq API key is valid and properly configured.");
+        } else {
+          throw new Error(`Groq API error: ${errorMessage}`);
+        }
+      }
+
+      if (!response.body) {
+        throw new Error("Groq API returned an empty response body");
+      }
+
+      return response.body;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Failed to call Groq API: ${error}`);
+    }
+  },
+
+  async generateCompletion(params: {
+    model: string;
+    prompt: string;
+    max_tokens: number;
+    temperature: number;
+  }) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      throw new Error("Groq API key is not configured. Please add GROQ_API_KEY to your environment variables.");
+    }
+
     try {
       const response = await fetch('https://api.groq.com/openai/v1/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+          'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify(params)
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Groq API error: ${errorData.error?.message || response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error calling Groq completion API:', error);
-      throw error;
-    }
-  },
-  
-  async generateChatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-        },
-        body: JSON.stringify(request)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Groq API error: ${errorData.error?.message || response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error calling Groq chat completion API:', error);
-      throw error;
-    }
-  },
-  
-  async generateChatCompletionStream(request: ChatCompletionRequest): Promise<ReadableStream> {
-    try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          ...request,
-          stream: true
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Groq API error: ${errorData.error?.message || response.statusText}`);
-      }
-      
-      return response.body as ReadableStream;
-    } catch (error) {
-      console.error('Error calling Groq streaming API:', error);
-      throw error;
-    }
-  },
 
-  async handleErrorResponse(response: Response): Promise<ErrorResponse> {
-    try {
+      if (!response.ok) {
+        const statusCode = response.status;
+        let errorMessage = response.statusText || 'Unknown error';
+        
+        try {
+          const errorData = await response.json();
+          if (errorData && typeof errorData === 'object') {
+            errorMessage = errorData.error?.message || 
+                          errorData.message || 
+                          errorMessage;
+          }
+        } catch (e) {
+          // If parsing JSON fails, use the status text
+        }
+        
+        if (statusCode === 401) {
+          throw new Error("Authentication failed: Please check your Groq API key is valid and properly configured.");
+        } else {
+          throw new Error(`Groq API error: ${errorMessage}`);
+        }
+      }
+
       return await response.json();
-    } catch (e) {
-      return { error: { message: response.statusText } };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Failed to call Groq API: ${error}`);
     }
   }
 };

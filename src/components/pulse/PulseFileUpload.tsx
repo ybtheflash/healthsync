@@ -26,7 +26,7 @@ export function PulseFileUpload({ onUpload, onCancel }: PulseFileUploadProps) {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFile(e.dataTransfer.files[0]);
     }
@@ -37,64 +37,56 @@ export function PulseFileUpload({ onUpload, onCancel }: PulseFileUploadProps) {
       handleFile(e.target.files[0]);
     }
   };
-  
+
   const handleFile = (file: File) => {
     setError(null);
-    
-    // Check file type (accept only text, PDF, or medical formats)
+
+    // Accepted file types
     const acceptedTypes = [
-      'text/plain', 
-      'application/pdf', 
-      'application/json', 
-      'text/csv',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
+      "text/plain",
+      "application/pdf",
+      "application/json",
+      "text/csv",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
     ];
-    
+
     if (!acceptedTypes.includes(file.type)) {
-      setError("Please upload a text, PDF, CSV, DOCX, or JSON file");
+      setError("Please upload a text, PDF, CSV, DOCX, or JSON file.");
       return;
     }
-    
-    // Check file size (limit to 5MB)
+
+    // File size limit (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError("File size exceeds 5MB limit");
+      setError("File size exceeds 5MB limit.");
       return;
     }
-    
+
     setFile(file);
   };
-  
+
   const processFile = async () => {
     if (!file) return;
-    
+
     setIsLoading(true);
-    
+
     try {
-      // In a real implementation, we would use appropriate parsers for each file type
-      // For this example, we'll just read text files
       const reader = new FileReader();
-      
+
       reader.onload = async (e) => {
         const text = e.target?.result as string;
-        
-        // For a real implementation:
-        // 1. We might send the file to a backend service for proper parsing
-        // 2. For PDFs, we'd need PDF.js or a backend parser
-        // 3. For DOCX, we'd need a specialized library or backend service
-        
         onUpload(text.substring(0, 1000) + (text.length > 1000 ? "..." : ""));
         setIsLoading(false);
       };
-      
+
       reader.onerror = () => {
-        setError("Error reading file");
+        setError("Error reading file. Please try again.");
         setIsLoading(false);
       };
-      
+
       reader.readAsText(file);
     } catch (error) {
       console.error("Error processing file:", error);
-      setError("Failed to process file");
+      setError("Failed to process file. Please try again.");
       setIsLoading(false);
     }
   };
@@ -107,7 +99,7 @@ export function PulseFileUpload({ onUpload, onCancel }: PulseFileUploadProps) {
           <X className="h-4 w-4" />
         </Button>
       </div>
-      
+
       {file ? (
         <div className="mb-4">
           <div className="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
@@ -118,8 +110,8 @@ export function PulseFileUpload({ onUpload, onCancel }: PulseFileUploadProps) {
                 {(file.size / 1024).toFixed(1)} KB
               </p>
             </div>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => setFile(null)}
             >
@@ -157,20 +149,20 @@ export function PulseFileUpload({ onUpload, onCancel }: PulseFileUploadProps) {
           </div>
         </div>
       )}
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
           <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      
+
       <div className="flex justify-end space-x-2">
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button 
-          onClick={processFile} 
+        <Button
+          onClick={processFile}
           disabled={!file || isLoading}
           className="bg-blue-600 hover:bg-blue-700"
         >

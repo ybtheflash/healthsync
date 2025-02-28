@@ -16,18 +16,16 @@ export function PulseInput({ onSubmit, onFileUpload, isLoading }: PulseInputProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    
+
     onSubmit(input);
     setInput("");
-    
-    // Focus back on textarea after submission
+
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Submit on Enter without Shift key
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (input.trim()) {

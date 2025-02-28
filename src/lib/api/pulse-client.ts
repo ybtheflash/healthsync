@@ -1,4 +1,5 @@
-// /lib/api/pulse-client.ts
+// src/lib/pulse-client.ts
+import { useState, useEffect, useRef } from "react";
 
 interface Source {
   title: string;
@@ -6,282 +7,328 @@ interface Source {
   snippet: string;
 }
 
-export interface PulseResponse {
-  id: string;
+interface PulseResponse {
   content: string;
   sources: Source[];
+  suggestedQueries?: string[];
 }
 
-export interface PulseError {
+interface PulseError {
   message: string;
-  code: string;
 }
 
-export async function queryPulse(query: string): Promise<PulseResponse | PulseError> {
-  try {
-    const response = await fetch('/api/pulse/query', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      return {
-        message: errorData.message || 'Failed to process your query',
-        code: errorData.code || 'API_ERROR',
-      };
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error querying Pulse:', error);
-    return {
-      message: 'An unexpected error occurred. Please try again.',
-      code: 'CLIENT_ERROR',
-    };
-  }
-}
-
+// Add the streamPulseQuery function that your component is trying to use
 export async function streamPulseQuery(
   query: string,
-  onChunk: (chunk: string, thinking?: string) => void,
-  onComplete: (sources: Source[]) => void,
+  onChunk: (chunk: string) => void,
+  onComplete: (sources: Source[], suggestedQueries?: string[]) => void,
   onError: (error: PulseError) => void
 ) {
   try {
-    const response = await fetch('/api/pulse/stream', {
+    // Create a new AbortController for this request
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const response = await fetch('/api/pulse/search', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ query }),
+      signal
     });
-    
+
     if (!response.ok) {
-      const errorData = await response.json();
-      onError({
-        message: errorData.message || 'Our servers are currently busy. Please try again later.',
-        code: errorData.code || 'API_ERROR',
-      });
-      return;
+      const data = await response.json();
+      throw new Error(data.message || 'Failed to search for medical information');
     }
-    
-    if (!response.body) {
-      onError({
-        message: 'Stream response not supported by your browser.',
-        code: 'STREAM_ERROR',
-      });
-      return;
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
     }
-    
-    const reader = response.body.getReader();
+
     const decoder = new TextDecoder();
-    let fullContent = '';
-    let thinkingContent = '';
-    
+    let partialChunk = '';
+
     while (true) {
       const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const combinedChunk = partialChunk + chunk;
       
-      if (done) {
-        // After streaming is complete, get sources for the content
-        try {
-          const sourcesResponse = await fetch('/api/pulse/sources', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              query,
-              content: fullContent 
-            }),
-          });
-          
-          if (sourcesResponse.ok) {
-            const { sources } = await sourcesResponse.json();
-            onComplete(sources);
-          } else {
-            onComplete([]);
-          }
-        } catch (error) {
-          console.error('Error fetching sources:', error);
-          onComplete([]);
-        }
-        break;
-      }
-      
-      // Decode the chunk
-      const text = decoder.decode(value, { stream: true });
-      
-      // Process the SSE data
-      const lines = text.split('\n').filter(line => line.trim() !== '');
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.substring(6); // Remove "data: " prefix
-          
-          // Skip the [DONE] marker
-          if (data === '[DONE]') continue;
-          
-          try {
-            // Parse the JSON data
-            const jsonData = JSON.parse(data);
-            
-            // Extract the content from the delta if it exists
-            if (jsonData.choices && 
-                jsonData.choices[0] && 
-                jsonData.choices[0].delta && 
-                jsonData.choices[0].delta.content) {
-              const newContent = jsonData.choices[0].delta.content;
-              fullContent += newContent;
-              
-              // Extract thinking content and regular content
-              const regex = /<think>([\s\S]*?)<\/think>/g;
-              let match;
-              let cleanContent = fullContent;
-              thinkingContent = '';
-              
-              // Extract all thinking content
-              while ((match = regex.exec(fullContent)) !== null) {
-                thinkingContent += match[1];
-                cleanContent = cleanContent.replace(match[0], '');
-              }
-              
-              // Send both the clean content and thinking content
-              onChunk(cleanContent.trim(), thinkingContent.trim() || undefined);
+      try {
+        // Check if we have a complete JSON object
+        const messages = combinedChunk.split('\n')
+          .filter(line => line.trim())
+          .map(line => {
+            try {
+              return JSON.parse(line);
+            } catch (e) {
+              return null;
             }
-          } catch (error) {
-            console.warn('Error parsing SSE JSON data:', error);
+          })
+          .filter(Boolean);
+        
+        // Process complete messages
+        for (const message of messages) {
+          if (message.type === 'content') {
+            onChunk(message.value);
+          } else if (message.type === 'complete') {
+            onComplete(message.sources || [], message.suggestedQueries || []);
+          } else if (message.type === 'error') {
+            throw new Error(message.value);
           }
         }
+        
+        // Store any incomplete data for the next chunk
+        const lastNewlineIndex = combinedChunk.lastIndexOf('\n');
+        if (lastNewlineIndex !== -1 && lastNewlineIndex < combinedChunk.length - 1) {
+          partialChunk = combinedChunk.substring(lastNewlineIndex + 1);
+        } else {
+          partialChunk = '';
+        }
+      } catch (e) {
+        // If we fail to parse, store the chunk for combining with the next one
+        partialChunk = combinedChunk;
       }
     }
-  } catch (error) {
-    console.error('Error streaming from Pulse:', error);
-    onError({
-      message: 'An unexpected error occurred. Please try again.',
-      code: 'CLIENT_ERROR',
-    });
-  }
-}
-
-function processStreamChunk(chunk: string): string {
-  // Remove any <think> tags and their content
-  return chunk.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-}
-
-export async function analyzeDocument(documentContent: string): Promise<PulseResponse | PulseError> {
-  try {
-    const response = await fetch('/api/pulse/document', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ documentContent }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      return {
-        message: errorData.message || 'Failed to analyze your document',
-        code: errorData.code || 'API_ERROR',
-      };
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      onError({ message: 'Request was cancelled' });
+    } else {
+      onError({ message: err instanceof Error ? err.message : 'An error occurred during search' });
+      console.error('Error during search:', err);
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error analyzing document with Pulse:', error);
-    return {
-      message: 'An unexpected error occurred while analyzing your document. Please try again.',
-      code: 'CLIENT_ERROR',
-    };
   }
 }
 
+// Add the streamDocumentAnalysis function for consistency
 export async function streamDocumentAnalysis(
-  documentContent: string,
+  document: string,
   onChunk: (chunk: string) => void,
-  onComplete: (sources: Source[]) => void,
+  onComplete: (sources: Source[], suggestedQueries?: string[]) => void,
   onError: (error: PulseError) => void
 ) {
   try {
-    const response = await fetch('/api/pulse/document/stream', {
+    // Create a new AbortController for this request
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const response = await fetch('/api/pulse/analyze', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ documentContent }),
+      body: JSON.stringify({ document }),
+      signal
     });
-    
+
     if (!response.ok) {
-      const errorData = await response.json();
-      onError({
-        message: errorData.message || 'Our servers are currently busy. Please try again later.',
-        code: errorData.code || 'API_ERROR',
-      });
-      return;
+      const data = await response.json();
+      throw new Error(data.message || 'Failed to analyze document');
     }
-    
-    if (!response.body) {
-      onError({
-        message: 'Stream response not supported by your browser.',
-        code: 'STREAM_ERROR',
-      });
-      return;
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
     }
-    
-    const reader = response.body.getReader();
+
     const decoder = new TextDecoder();
-    let buffer = '';
-    
+    let partialChunk = '';
+
     while (true) {
       const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const combinedChunk = partialChunk + chunk;
       
-      if (done) {
-        // After streaming is complete, get sources for the document analysis
-        try {
-          const sourcesResponse = await fetch('/api/pulse/document/sources', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              documentContent: documentContent.substring(0, 1000), // Send a preview for source generation
-              content: buffer 
-            }),
-          });
-          
-          if (sourcesResponse.ok) {
-            const { sources } = await sourcesResponse.json();
-            onComplete(sources);
-          } else {
-            onComplete([]);
+      try {
+        // Check if we have complete JSON objects
+        const messages = combinedChunk.split('\n')
+          .filter(line => line.trim())
+          .map(line => {
+            try {
+              return JSON.parse(line);
+            } catch (e) {
+              return null;
+            }
+          })
+          .filter(Boolean);
+        
+        // Process complete messages
+        for (const message of messages) {
+          if (message.type === 'content') {
+            onChunk(message.value);
+          } else if (message.type === 'complete') {
+            onComplete(message.sources || [], message.suggestedQueries || []);
+          } else if (message.type === 'error') {
+            throw new Error(message.value);
           }
-        } catch (error) {
-          console.error('Error fetching document sources:', error);
-          onComplete([]);
         }
-        break;
-      }
-      
-      // Decode the chunk and add to buffer
-      const text = decoder.decode(value, { stream: true });
-      
-      // Process the text to remove thinking tags if present
-      const processedText = processStreamChunk(text);
-      
-      if (processedText) {
-        buffer = processedText;
-        onChunk(buffer);
+        
+        // Store any incomplete data for the next chunk
+        const lastNewlineIndex = combinedChunk.lastIndexOf('\n');
+        if (lastNewlineIndex !== -1 && lastNewlineIndex < combinedChunk.length - 1) {
+          partialChunk = combinedChunk.substring(lastNewlineIndex + 1);
+        } else {
+          partialChunk = '';
+        }
+      } catch (e) {
+        // If we fail to parse, store the chunk for combining with the next one
+        partialChunk = combinedChunk;
       }
     }
-  } catch (error) {
-    console.error('Error streaming document analysis:', error);
-    onError({
-      message: 'An unexpected error occurred. Please try again.',
-      code: 'CLIENT_ERROR',
-    });
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      onError({ message: 'Request was cancelled' });
+    } else {
+      onError({ message: err instanceof Error ? err.message : 'An error occurred during document analysis' });
+      console.error('Error during document analysis:', err);
+    }
   }
 }
+
+export const usePulseClient = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [response, setResponse] = useState<string>("");
+  const [sources, setSources] = useState<Source[]>([]);
+  const [suggestedQueries, setSuggestedQueries] = useState<string[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const resetState = () => {
+    setIsLoading(false);
+    setError(null);
+    setResponse("");
+    setSources([]);
+    setSuggestedQueries([]);
+  };
+
+  const cancelRequest = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      cancelRequest();
+    };
+  }, []);
+
+  const searchMedicalInfo = async (query: string) => {
+    try {
+      resetState();
+      setIsLoading(true);
+      
+      // Create a new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
+      await streamPulseQuery(
+        query,
+        (chunk) => {
+          setResponse(prev => prev + chunk);
+        },
+        (sources, suggestedQueries) => {
+          setSources(sources);
+          setSuggestedQueries(suggestedQueries || []);
+          setIsLoading(false);
+        },
+        (error) => {
+          setError(error.message);
+          setIsLoading(false);
+        }
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setIsLoading(false);
+    }
+  };
+
+  const analyzeDocument = async (document: string) => {
+    try {
+      resetState();
+      setIsLoading(true);
+      
+      // Create a new AbortController for this request
+      abortControllerRef.current = new AbortController();
+      
+      await streamDocumentAnalysis(
+        document,
+        (chunk) => {
+          setResponse(prev => prev + chunk);
+        },
+        (sources, suggestedQueries) => {
+          setSources(sources);
+          setSuggestedQueries(suggestedQueries || []);
+          setIsLoading(false);
+        },
+        (error) => {
+          setError(error.message);
+          setIsLoading(false);
+        }
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    searchMedicalInfo,
+    analyzeDocument,
+    cancelRequest,
+    isLoading,
+    error,
+    response,
+    sources,
+    suggestedQueries
+  };
+};
+
+// For use with API routes
+export const streamResponse = async (
+  res: any,
+  callback: (
+    onChunk: (chunk: string) => void,
+    onComplete: (sources: Source[], suggestedQueries?: string[]) => void,
+    onError: (error: PulseError) => void
+  ) => Promise<void>
+) => {
+  // Set headers for streaming
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Transfer-Encoding', 'chunked');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  const sendChunk = (chunk: string) => {
+    res.write(JSON.stringify({ type: 'content', value: chunk }) + '\n');
+  };
+
+  const sendComplete = (sources: Source[], suggestedQueries?: string[]) => {
+    res.write(JSON.stringify({ 
+      type: 'complete', 
+      sources, 
+      suggestedQueries 
+    }) + '\n');
+    res.end();
+  };
+
+  const sendError = (error: PulseError) => {
+    res.write(JSON.stringify({ type: 'error', value: error.message }) + '\n');
+    res.end();
+  };
+
+  try {
+    await callback(sendChunk, sendComplete, sendError);
+  } catch (error) {
+    console.error('Error streaming response:', error);
+    sendError({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+  }
+};
