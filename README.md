@@ -1,3 +1,9 @@
+## Description
+
+HealthSync AI addresses critical healthcare challenges by providing a comprehensive digital health management solution. Our platform tackles the fragmentation of medical information by creating a unified repository where users can securely store and manage all their health data in one place. Its powered by multiple AI agents and top notch storage technologies with strong & secure authentication system to protect what's yours. Helps you access the power of medical knowledge on the go making first aid easier than ever and your one true friend during emergency situations.
+
+____________________________________________________________________________________________________________________________________
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
