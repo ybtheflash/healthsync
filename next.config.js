@@ -3,7 +3,7 @@ const nextConfig = {
     reactStrictMode: true,
     swcMinify: true,
     // Exclude medications directory from build
-    unstable_excludeFiles: ['**/medications/**'],
+    unstable_excludeFiles: ['**/notes/**'],
     // Vercel-specific optimizations are automatically applied
     // You can add additional configuration below as needed
     images: {
