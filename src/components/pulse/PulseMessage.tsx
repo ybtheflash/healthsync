@@ -53,7 +53,7 @@ export function PulseMessage({ message, onQueryClick }: MessageProps) {
           <span className={isUser ? "text-slate-600" : "font-medium text-blue-600"}>
             {isUser ? "You" : "Pulse"}
           </span>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-slate-500" suppressHydrationWarning>
             {formatTime(message.timestamp)}
           </span>
         </div>
